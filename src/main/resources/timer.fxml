@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXSpinner?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <GridPane alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" VBox.vgrow="ALWAYS">
+        <columnConstraints>
+          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" percentHeight="60.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+        </rowConstraints>
+         <children>
+            <Label fx:id="timeRemaining" text="00:00:00">
+               <font>
+                  <Font size="73.0" />
+               </font>
+            </Label>
+            <JFXSpinner fx:id="pomodoroProgress" progress="1.0" style="-fx-fill: blue;" GridPane.rowIndex="1" />
+            <Label fx:id="statusText" text="Stopped" GridPane.rowIndex="2">
+               <font>
+                  <Font size="17.0" />
+               </font>
+            </Label>
+         </children>
+      </GridPane>
+      <ButtonBar prefHeight="40.0" prefWidth="200.0" VBox.vgrow="NEVER">
+        <buttons>
+            <JFXButton fx:id="snoozeButton" onAction="#snooze" text="Snooze" textFill="#9507f7">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </JFXButton>
+            <JFXButton fx:id="stopButton" onAction="#stop" text="Stop" textFill="#ff0101">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font></JFXButton>
+            <JFXButton fx:id="startButton" onAction="#start" text="Start" textFill="#49bf2f">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font></JFXButton>
+        </buttons>
+         <VBox.margin>
+            <Insets right="5.0" />
+         </VBox.margin>
+      </ButtonBar>
+   </children>
+</VBox>
