@@ -1,13 +1,13 @@
 package eu.bioemergences.mhammons.latomate.models
 
-import akka.actor.typed.{ActorRef, Behavior, PostStop}
 import akka.actor.typed.scaladsl.Behaviors
-import eu.bioemergences.mhammons.latomate.controllers.FXMLTimerController
+import akka.actor.typed.{ActorRef, Behavior, PostStop}
+import eu.bioemergences.mhammons.latomate.controllers.TimerController
 
 import scala.concurrent.duration._
 
 object TimerModel {
-  def init(controller: FXMLTimerController): Behavior[TimerVocab] =
+  def init(controller: TimerController): Behavior[TimerVocab] =
     Behaviors.setup { ctx =>
       val snoozeLimit = 1
       val snoozeAmount = 5.minutes
