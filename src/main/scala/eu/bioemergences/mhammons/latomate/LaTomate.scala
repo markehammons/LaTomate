@@ -6,6 +6,7 @@ import eu.bioemergences.mhammons.latomate.models.RootModel
 import javafx.application.{Application => JavaFXApplication}
 import javafx.fxml.FXMLLoader
 import javafx.scene.Scene
+import javafx.scene.image.Image
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
 
@@ -15,6 +16,13 @@ class LaTomate extends JavaFXApplication {
   override def start(primaryStage: Stage): Unit = {
     val testMode = this.getParameters.getRaw.contains("testMode")
     primaryStage.setTitle("LaTomate - Pomodoro Timer")
+
+    val icon =
+      getClass.getClassLoader.getResource("icons8-tomato-48.png").toExternalForm
+
+    val image = new Image(icon)
+
+    primaryStage.getIcons.add(image)
 
     val loader = new FXMLLoader(getClass.getResource("/timer.fxml"))
     val timerController = new TimerController(rootModel)
