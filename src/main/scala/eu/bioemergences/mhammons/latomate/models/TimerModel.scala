@@ -2,12 +2,12 @@ package eu.bioemergences.mhammons.latomate.models
 
 import akka.actor.typed.{ActorRef, Behavior, PostStop}
 import akka.actor.typed.scaladsl.Behaviors
-import eu.bioemergences.mhammons.latomate.controllers.TimerController
+import eu.bioemergences.mhammons.latomate.controllers.FXMLTimerController
 
 import scala.concurrent.duration._
 
 object TimerModel {
-  def init(controller: TimerController): Behavior[TimerVocab] =
+  def init(controller: FXMLTimerController): Behavior[TimerVocab] =
     Behaviors.setup { ctx =>
       val snoozeLimit = 1
       val snoozeAmount = 5.minutes
@@ -30,7 +30,7 @@ object TimerModel {
               Behaviors.stopped
           }
           .receiveSignal {
-            case (ctx, PostStop) =>
+            case (_, PostStop) =>
               ctx.log.info("shutting down...")
               Behaviors.stopped
           }
@@ -84,7 +84,7 @@ object TimerModel {
               Behaviors.stopped
           }
           .receiveSignal {
-            case (ctx, PostStop) =>
+            case (_, PostStop) =>
               ctx.log.info("Shutting down...")
               Behaviors.stopped
           }
@@ -136,7 +136,7 @@ object TimerModel {
                 Behaviors.stopped
             }
             .receiveSignal {
-              case (ctx, PostStop) =>
+              case (_, PostStop) =>
                 ctx.log.info("Shutting down...")
                 Behaviors.stopped
             }
