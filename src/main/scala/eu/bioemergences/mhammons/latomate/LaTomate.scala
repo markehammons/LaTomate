@@ -14,7 +14,6 @@ class LaTomate extends JavaFXApplication {
   private val rootModel = ActorSystem(RootModel.init, "LaTomate-Root")
 
   override def start(primaryStage: Stage): Unit = {
-    val testMode = this.getParameters.getRaw.contains("testMode")
     primaryStage.setTitle("LaTomate - Pomodoro Timer")
 
     val icon =
@@ -32,12 +31,6 @@ class LaTomate extends JavaFXApplication {
     val scene = new Scene(vbox)
     primaryStage.setScene(scene)
     primaryStage.show()
-
-    Thread.sleep(1000)
-    if (testMode) {
-      timerController.periodCompleteNotification("test")
-      timerController.periodEndingNotification("test2")
-    }
   }
 
   override def stop() = {
