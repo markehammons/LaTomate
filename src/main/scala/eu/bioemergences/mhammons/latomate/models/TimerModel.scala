@@ -1,149 +1,154 @@
 package eu.bioemergences.mhammons.latomate.models
 
-import akka.actor.typed.{ActorRef, Behavior, PostStop}
 import akka.actor.typed.scaladsl.Behaviors
-import eu.bioemergences.mhammons.latomate.controllers.TimerController
+import akka.actor.typed.{ActorRef, Behavior, PostStop}
 
 import scala.concurrent.duration._
 
 object TimerModel {
-  def init(controller: TimerController): Behavior[TimerVocab] =
-    Behaviors.setup { ctx =>
-      val snoozeLimit = 1
-      val snoozeAmount = 5.minutes
-      val tickFrequency = 200.millis
-      val workDuration = 25.minutes
-      val shortRestDuration = 5.minutes
-      val longRestDuration = 20.minutes
-      val warningPoint = 3.minutes
-      val pomodorosTillLongRest = 4
-      var pomodoros = 0
+  def stopped(state: TimerModelState): Behavior[TimerVocab] = Behaviors.setup {
+    ctx =>
+      ctx.log.debug(s"Stopped with state $state")
+      state.controller.stopTimer("Stopped")
 
-      lazy val stopped: Behavior[TimerVocab] = Behaviors.setup { _ =>
-        controller.stopTimer("Stopped")
+      Behaviors
+        .receiveMessagePartial[TimerVocab] {
+          case Start =>
+            pomodoro(state)
+          case Shutdown =>
+            Behaviors.stopped
+        }
+        .receiveSignal {
+          case (_, PostStop) =>
+            ctx.log.info("shutting down...")
+            Behaviors.stopped
+        }
+  }
 
-        Behaviors
-          .receiveMessagePartial[TimerVocab] {
-            case Start =>
-              pomodoro
-            case Shutdown =>
-              Behaviors.stopped
-          }
-          .receiveSignal {
-            case (ctx, PostStop) =>
-              ctx.log.info("shutting down...")
-              Behaviors.stopped
-          }
-      }
+  def pomodoro(state: TimerModelState) = Behaviors.setup[TimerVocab] { ctx =>
+    ctx.log.debug(s"Entering a pomodoro with state $state")
+    val body = {
+      val timer =
+        new Timer(state.workDuration,
+                  Some(state.warningPoint),
+                  state.snoozeLength,
+                  state.snoozeLimit)
 
-      lazy val pomodoro: Behavior[TimerVocab] = Behaviors.withTimers { timer =>
-        timer.startPeriodicTimer(TickKey, Tick, tickFrequency)
+      state.controller.startWork("Pomodoro", state.workDuration)
 
-        pomodoros += 1
-        var startTime = System.currentTimeMillis()
-        var snoozes = 0
-        var warned = false
-        controller.startWork("Pomodoro")
-        controller.updateTimer(workDuration.toMillis, 1.0)
-
-        Behaviors
-          .receiveMessagePartial[TimerVocab] {
-            case Tick =>
-              val pomodoroRemaining =
-                workDuration - (System.currentTimeMillis() - startTime).millis
-              if (pomodoroRemaining <= 0.millis) {
-                controller.periodCompleteNotification("Pomodoro finished!")
-                controller.startBreak("Break Time!")
-                restPeriod
-              } else if (pomodoroRemaining <= warningPoint && !warned) {
-                controller.updateTimer(pomodoroRemaining.toMillis,
-                                       pomodoroRemaining / workDuration)
-                controller.periodEndingNotification(
-                  s"Pomodoro ending in $pomodoroRemaining")
-                warned = true
-                Behaviors.same
-              } else {
-                controller.updateTimer(pomodoroRemaining.toMillis,
-                                       pomodoroRemaining / workDuration)
-                Behaviors.same
+      Behaviors
+        .receiveMessagePartial[TimerVocab] {
+          case Tick =>
+            timer.tick(state.tickPeriod)
+            if (timer.isComplete()) {
+              state.controller.periodCompleteNotification()
+              restPeriod(state.copy(pomodoros = state.pomodoros + 1))
+            } else {
+              if (timer.shouldWarn()) {
+                state.controller.periodEndingNotification()
               }
-            case Stop =>
-              controller.resetTimer()
-              controller.stopTimer("Stopped")
-              stopped
 
-            case Snooze =>
-              startTime += snoozeAmount.toMillis
-              snoozes += 1
-              if (snoozes >= snoozeLimit) {
-                controller.disableSnooze()
-              }
+              state.controller.updateTimer(
+                timer.getRemainingTime().toMillis,
+                timer.getRemainingTime() / state.workDuration)
               Behaviors.same
-
-            case Shutdown =>
-              Behaviors.stopped
-          }
-          .receiveSignal {
-            case (ctx, PostStop) =>
-              ctx.log.info("Shutting down...")
-              Behaviors.stopped
-          }
-      }
-
-      lazy val restPeriod: Behavior[TimerVocab] = Behaviors.withTimers {
-        timer =>
-          timer.startPeriodicTimer(TickKey, Tick, tickFrequency)
-
-          val startTime = System.currentTimeMillis()
-          val restDuration = if (pomodoros <= pomodorosTillLongRest) {
-            shortRestDuration
-          } else {
-            pomodoros = 0
-            longRestDuration
-          }
-
-          controller.updateTimer(restDuration.toMillis, 1.0)
-
-          Behaviors
-            .receiveMessagePartial[TimerVocab] {
-              case Tick =>
-                val restRemaining =
-                  restDuration - (System.currentTimeMillis() - startTime).millis
-
-                if (restRemaining <= 0.millis) {
-                  controller.periodCompleteNotification("Break time is over!")
-                  controller.stopTimer("Stopped")
-                  controller.resetTimer()
-                  stopped
-                } else if (restRemaining <= warningPoint && restDuration > 5.minutes) {
-                  controller.updateTimer(restRemaining.toMillis,
-                                         restRemaining / restDuration)
-                  controller.periodEndingNotification(
-                    "Break time will end soon!")
-                  Behaviors.same
-                } else {
-                  controller.updateTimer(restRemaining.toMillis,
-                                         restRemaining / restDuration)
-                  Behaviors.same
-                }
-
-              case Stop =>
-                controller.stopTimer("Stopped")
-                controller.resetTimer()
-                stopped
-
-              case Shutdown =>
-                Behaviors.stopped
             }
-            .receiveSignal {
-              case (ctx, PostStop) =>
-                ctx.log.info("Shutting down...")
-                Behaviors.stopped
-            }
-      }
+          case Stop =>
+            stopped(state.copy(pomodoros = state.pomodoros + 1))
 
-      stopped
+          case Snooze =>
+            timer.snooze()
+            if (!timer.canSnooze) {
+              state.controller.disableSnooze()
+            }
+            Behaviors.same
+
+          case Shutdown =>
+            Behaviors.stopped
+        }
+        .receiveSignal {
+          case (_, PostStop) =>
+            ctx.log.info("Shutting down...")
+            Behaviors.stopped
+        }
     }
+
+    if (state.withScheduling) {
+      Behaviors.withTimers[TimerVocab] { scheduler =>
+        scheduler.startPeriodicTimer(TickKey, Tick, state.tickPeriod)
+        body
+      }
+    } else {
+      body
+    }
+  }
+
+  def restPeriod(state: TimerModelState) = Behaviors.setup[TimerVocab] { ctx =>
+    ctx.log.debug(s"Entering rest state with $state")
+    val body = {
+      val restDuration = if (state.pomodoros < state.pomodorosTillLongRest) {
+        state.shortRestDuration
+      } else {
+        state.longRestDuration
+      }
+
+      val timer = new Timer(restDuration,
+                            if (restDuration == state.longRestDuration)
+                              Some(state.warningPoint)
+                            else None,
+                            Duration.Zero,
+                            0)
+
+      state.controller.startBreak("Break Time!", restDuration)
+
+      val nState = {
+        if (restDuration == state.longRestDuration) {
+          state.copy(pomodoros = 0)
+        } else {
+          state
+        }
+      }
+
+      Behaviors
+        .receiveMessagePartial[TimerVocab] {
+          case Tick =>
+            timer.tick(state.tickPeriod)
+            if (timer.isComplete()) {
+              state.controller.periodCompleteNotification()
+              stopped(nState)
+            } else {
+              if (timer.shouldWarn()) {
+                state.controller.periodEndingNotification()
+              }
+
+              state.controller.updateTimer(
+                timer.getRemainingTime().toMillis,
+                timer.getRemainingTime() / restDuration)
+              Behaviors.same
+            }
+
+          case Stop =>
+            stopped(nState)
+
+          case Shutdown =>
+            Behaviors.stopped
+        }
+        .receiveSignal {
+          case (_, PostStop) =>
+            ctx.log.info("Shutting down...")
+            Behaviors.stopped
+        }
+    }
+
+    if (state.withScheduling) {
+      Behaviors.withTimers[TimerVocab] { scheduler =>
+        scheduler.startPeriodicTimer(TickKey, Tick, state.tickPeriod)
+        body
+      }
+    } else {
+      body
+    }
+  }
 
   type TimerModel = ActorRef[TimerVocab]
 

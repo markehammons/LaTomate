@@ -27,7 +27,10 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed"
 ).map(_ % akkaVersion)
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
+libraryDependencies += "org.scalamock" %% "scalamock" % "4.1.0" % Test
+libraryDependencies += "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test
+
 
 scalacOptions ++= Seq(
   "-unchecked",
@@ -61,7 +64,7 @@ libraryDependencies ++= Seq(
   "javafx-media",
 ).map("org.openjfx" % _ % javafxVersion classifier osName)
 
-fork in run := true
+fork := true
 
 libraryDependencies += "com.jfoenix" % "jfoenix" % "9.0.8"
 
