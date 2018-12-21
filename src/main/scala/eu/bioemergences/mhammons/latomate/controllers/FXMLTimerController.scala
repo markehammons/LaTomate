@@ -13,6 +13,8 @@ import javafx.fxml.FXML
 import javafx.scene.control.Label
 import javafx.scene.media.AudioClip
 
+import scala.concurrent.duration.FiniteDuration
+
 class FXMLTimerController(rootModel: RootModel) extends TimerController {
   @FXML
   protected var timeRemaining: Label = _
@@ -81,13 +83,7 @@ class FXMLTimerController(rootModel: RootModel) extends TimerController {
       pomodoroProgress.setProgress(progress)
     })
 
-  def resetTimer() =
-    Platform.runLater(() => {
-      timeRemaining.setText(Time.prettyPrintMillis(0))
-      pomodoroProgress.setProgress(-0.0)
-    })
-
-  def startBreak(statusMessage: String) =
+  def startBreak(statusMessage: String, duration: FiniteDuration) =
     Platform.runLater(() => {
       snoozeButton.setVisible(false)
       snoozeButton.setManaged(false)
@@ -99,9 +95,11 @@ class FXMLTimerController(rootModel: RootModel) extends TimerController {
       startButton.setManaged(false)
 
       statusText.setText(statusMessage)
+      timeRemaining.setText(Time.prettyPrintMillis(duration.toMillis))
+      pomodoroProgress.setProgress(1.0)
     })
 
-  def startWork(statusMessage: String): Unit =
+  def startWork(statusMessage: String, duration: FiniteDuration): Unit =
     Platform.runLater(() => {
       snoozeButton.setDisable(false)
       snoozeButton.setVisible(true)
@@ -114,6 +112,8 @@ class FXMLTimerController(rootModel: RootModel) extends TimerController {
       startButton.setManaged(false)
 
       statusText.setText(statusMessage)
+      timeRemaining.setText(Time.prettyPrintMillis(duration.toMillis))
+      pomodoroProgress.setProgress(1.0)
     })
 
   def stopTimer(statusMessage: String): Unit =
@@ -128,14 +128,16 @@ class FXMLTimerController(rootModel: RootModel) extends TimerController {
       startButton.setManaged(true)
 
       statusText.setText(statusMessage)
+      timeRemaining.setText(Time.prettyPrintMillis(0))
+      pomodoroProgress.setProgress(-0.0)
     })
 
-  def periodCompleteNotification(message: String) =
+  def periodCompleteNotification() =
     Platform.runLater(() => {
       dingTone.play()
     })
 
-  def periodEndingNotification(message: String) =
+  def periodEndingNotification() =
     Platform.runLater(() => {
       warningTone.play()
     })

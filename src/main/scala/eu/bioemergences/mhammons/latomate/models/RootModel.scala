@@ -9,8 +9,9 @@ object RootModel {
     Behaviors
       .receive[RootVocabulary] {
         case (context, SpawnTimerModel(controller)) =>
+          val timerModelState = TimerModelState(true, 0, controller)
           controller.setModel(
-            context.spawn(TimerModel.init(controller), "TimerModel"))
+            context.spawn(TimerModel.stopped(timerModelState), "TimerModel"))
           Behavior.same
       }
       .receiveSignal {

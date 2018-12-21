@@ -29,6 +29,8 @@ class FXMLTimerControllerSpecification
 
   fxmlTimerController.setModel(timerMailbox.ref)
 
+  Thread.sleep(150)
+
   "An FXMLTimerController" should {
     "request a timer model from the root model on start" in {
       fxmlTimerController.initialize()
