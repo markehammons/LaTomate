@@ -5,7 +5,7 @@ import eu.bioemergences.mhammons.latomate.models.RootModel.{
   RootVocabulary,
   SpawnTimerModel
 }
-import eu.bioemergences.mhammons.latomate.models.TimerModel.{
+import eu.bioemergences.mhammons.latomate.models.PomodoroModel.{
   Snooze,
   Start,
   Stop,
@@ -14,7 +14,7 @@ import eu.bioemergences.mhammons.latomate.models.TimerModel.{
 import javafx.application.Platform
 import org.scalatest.{BeforeAndAfterAll, DiagrammedAssertions, WordSpec}
 
-class FXMLTimerControllerSpecification
+class PomodoroControllerImplSpecification
     extends WordSpec
     with DiagrammedAssertions
     with BeforeAndAfterAll {
@@ -23,35 +23,35 @@ class FXMLTimerControllerSpecification
 
   val timerMailbox = TestInbox[TimerVocab]()
 
-  val fxmlTimerController = new FXMLTimerController(rootMailbox.ref)
+  val pomodoroControllerImpl = new PomodoroControllerImpl(rootMailbox.ref)
 
   Platform.startup(() => ())
 
-  fxmlTimerController.setModel(timerMailbox.ref)
+  pomodoroControllerImpl.setModel(timerMailbox.ref)
 
   Thread.sleep(150)
 
-  "An FXMLTimerController" should {
+  "An FXMLPomodoroControllerImpl" should {
     "request a timer model from the root model on start" in {
-      fxmlTimerController.initialize()
+      pomodoroControllerImpl.initialize()
 
-      rootMailbox.expectMessage(SpawnTimerModel(fxmlTimerController))
+      rootMailbox.expectMessage(SpawnTimerModel(pomodoroControllerImpl))
     }
 
     "send a start message on start function activation" in {
-      fxmlTimerController.start()
+      pomodoroControllerImpl.start()
 
       timerMailbox.expectMessage(Start)
     }
 
     "send a snooze message on snooze function activation" in {
-      fxmlTimerController.snooze()
+      pomodoroControllerImpl.snooze()
 
       timerMailbox.expectMessage(Snooze)
     }
 
     "send a stop message on stop function activation" in {
-      fxmlTimerController.stop()
+      pomodoroControllerImpl.stop()
 
       timerMailbox.expectMessage(Stop)
     }

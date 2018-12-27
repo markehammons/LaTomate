@@ -1,8 +1,8 @@
 package eu.bioemergences.mhammons.latomate.models
 
 import akka.actor.testkit.typed.scaladsl.BehaviorTestKit
-import eu.bioemergences.mhammons.latomate.controllers.TimerController
-import eu.bioemergences.mhammons.latomate.models.TimerModel.{
+import eu.bioemergences.mhammons.latomate.controllers.PomodoroController
+import eu.bioemergences.mhammons.latomate.models.PomodoroModel.{
   Snooze,
   Start,
   Stop,
@@ -14,16 +14,16 @@ import org.scalatest.{DiagrammedAssertions, WordSpec}
 
 import scala.concurrent.duration._
 
-class TimerModelSpecification
+class PomodoroModelSpecification
     extends WordSpec
     with DiagrammedAssertions
     with MockFactory {
 
-  "A TimerModel" should {
+  "A PomodoroModel" should {
     "start ticking when sent the start command" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
-      val timerModelState = TimerModelState(false, 0, mockController)
+      val timerModelState = PomodoroModelState(false, 0, mockController)
 
       (mockController.updateTimer _)
         .expects(where { case (_, _) => true })
@@ -31,7 +31,7 @@ class TimerModelSpecification
       (mockController.startWork _).expects("Pomodoro",
                                            timerModelState.workDuration)
 
-      val timerModel = BehaviorTestKit(TimerModel.stopped(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.stopped(timerModelState))
 
       timerModel.run(Start)
 
@@ -39,10 +39,10 @@ class TimerModelSpecification
     }
 
     "enter rest mode after the alotted period has passed after the start command has been sent" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
       val timerModelState =
-        TimerModelState(false, 0, mockController, tickPeriod = 1.minutes)
+        PomodoroModelState(false, 0, mockController, tickPeriod = 1.minutes)
 
       (mockController.updateTimer _)
         .expects(where { case (_, _) => true })
@@ -55,7 +55,7 @@ class TimerModelSpecification
       (mockController.periodEndingNotification _).expects()
       (mockController.periodCompleteNotification _).expects()
 
-      val timerModel = BehaviorTestKit(TimerModel.stopped(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.stopped(timerModelState))
 
       timerModel.run(Start)
 
@@ -65,10 +65,10 @@ class TimerModelSpecification
     }
 
     "enter the stopped cycle after completing a short rest period" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
       val timerModelState =
-        TimerModelState(false, 0, mockController, tickPeriod = 1.minute)
+        PomodoroModelState(false, 0, mockController, tickPeriod = 1.minute)
 
       val ticks =
         (timerModelState.shortRestDuration / timerModelState.tickPeriod).ceil
@@ -86,7 +86,7 @@ class TimerModelSpecification
 
       (mockController.stopTimer _).expects("Stopped")
 
-      val timerModel = BehaviorTestKit(TimerModel.restPeriod(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.restPeriod(timerModelState))
 
       for (_ <- 0 until ticks) {
         timerModel.run(Tick)
@@ -94,10 +94,10 @@ class TimerModelSpecification
     }
 
     "enter a long rest period after 4 pomodoros" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
       val timerModelState =
-        TimerModelState(false, 4, mockController, tickPeriod = 1.minute)
+        PomodoroModelState(false, 4, mockController, tickPeriod = 1.minute)
 
       val ticks =
         (timerModelState.longRestDuration / timerModelState.tickPeriod).ceil
@@ -116,7 +116,7 @@ class TimerModelSpecification
 
       (mockController.stopTimer _).expects("Stopped")
 
-      val timerModel = BehaviorTestKit(TimerModel.restPeriod(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.restPeriod(timerModelState))
 
       for (_ <- 0 until ticks) {
         timerModel.run(Tick)
@@ -124,10 +124,10 @@ class TimerModelSpecification
     }
 
     "complete a full work/rest mode cycle successfully" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
       val timerModelState =
-        TimerModelState(false, 0, mockController, tickPeriod = 1.minutes)
+        PomodoroModelState(false, 0, mockController, tickPeriod = 1.minutes)
 
       val workTicks =
         (timerModelState.workDuration / timerModelState.tickPeriod).ceil.toInt
@@ -147,7 +147,7 @@ class TimerModelSpecification
       (mockController.periodEndingNotification _).expects()
       (mockController.periodCompleteNotification _).expects().twice()
 
-      val timerModel = BehaviorTestKit(TimerModel.stopped(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.stopped(timerModelState))
 
       assert(timerModel.logEntries().count(_.message.contains("Stopped")) == 1)
       assert(timerModel.logEntries().count(_.message.contains("pomodoro")) == 0)
@@ -177,10 +177,10 @@ class TimerModelSpecification
     }
 
     "complete four full work/rest mode cycles correctly" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
       val timerModelState =
-        TimerModelState(false, 0, mockController, tickPeriod = 1.minute)
+        PomodoroModelState(false, 0, mockController, tickPeriod = 1.minute)
 
       val workTicks =
         (timerModelState.workDuration / timerModelState.tickPeriod).ceil.toInt
@@ -210,7 +210,7 @@ class TimerModelSpecification
       (mockController.periodEndingNotification _).expects().repeat(5)
       (mockController.periodCompleteNotification _).expects().repeat(8)
 
-      val timerModel = BehaviorTestKit(TimerModel.stopped(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.stopped(timerModelState))
 
       assert(timerModel.logEntries().count(_.message.contains("Stopped")) == 1)
       assert(timerModel.logEntries().count(_.message.contains("pomodoro")) == 0)
@@ -263,13 +263,13 @@ class TimerModelSpecification
     }
 
     "not stop when stopped" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
-      val timerModelState = TimerModelState(false, 0, mockController)
+      val timerModelState = PomodoroModelState(false, 0, mockController)
 
       (mockController.stopTimer _).expects("Stopped").noMoreThanOnce()
 
-      val timerModel = BehaviorTestKit(TimerModel.stopped(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.stopped(timerModelState))
 
       timerModel.run(Stop)
 
@@ -277,10 +277,10 @@ class TimerModelSpecification
     }
 
     "snooze only a certain number of times" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
       val timerModelState =
-        TimerModelState(false, 0, mockController, snoozeLimit = 3)
+        PomodoroModelState(false, 0, mockController, snoozeLimit = 3)
 
       val workTicks =
         (timerModelState.workDuration / timerModelState.tickPeriod).ceil.toInt
@@ -304,7 +304,7 @@ class TimerModelSpecification
       (mockController.startBreak _).expects("Break Time!",
                                             timerModelState.shortRestDuration)
 
-      val timerModel = BehaviorTestKit(TimerModel.pomodoro(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.pomodoro(timerModelState))
 
       assert(timerModel.logEntries().count(_.message.contains("Stopped")) == 0)
       assert(timerModel.logEntries().count(_.message.contains("pomodoro")) == 1)
@@ -332,10 +332,10 @@ class TimerModelSpecification
     }
 
     "still count pomodoros stopped midway as pomodoros" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
       val timerModelState =
-        TimerModelState(false,
+        PomodoroModelState(false,
                         0,
                         mockController,
                         pomodorosTillLongRest = 1,
@@ -353,7 +353,7 @@ class TimerModelSpecification
 
       (mockController.periodCompleteNotification _).expects()
 
-      val timerModel = BehaviorTestKit(TimerModel.pomodoro(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.pomodoro(timerModelState))
 
       timerModel.run(Stop)
 
@@ -363,17 +363,17 @@ class TimerModelSpecification
     }
 
     "stop from the rest state" in {
-      val mockController = mock[TimerController]
+      val mockController = mock[PomodoroController]
 
       val timerModelState =
-        TimerModelState(false, 0, mockController)
+        PomodoroModelState(false, 0, mockController)
 
       (mockController.startBreak _).expects("Break Time!",
                                             timerModelState.shortRestDuration)
 
       (mockController.stopTimer _).expects("Stopped")
 
-      val timerModel = BehaviorTestKit(TimerModel.restPeriod(timerModelState))
+      val timerModel = BehaviorTestKit(PomodoroModel.restPeriod(timerModelState))
 
       timerModel.run(Stop)
 

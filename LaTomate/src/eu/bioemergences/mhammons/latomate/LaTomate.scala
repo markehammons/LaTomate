@@ -1,7 +1,7 @@
 package eu.bioemergences.mhammons.latomate
 
 import akka.actor.typed.ActorSystem
-import eu.bioemergences.mhammons.latomate.controllers.FXMLTimerController
+import eu.bioemergences.mhammons.latomate.controllers.PomodoroControllerImpl
 import eu.bioemergences.mhammons.latomate.models.RootModel
 import javafx.application.{Application => JavaFXApplication}
 import javafx.fxml.FXMLLoader
@@ -23,8 +23,8 @@ class LaTomate extends JavaFXApplication {
 
     primaryStage.getIcons.add(image)
 
-    val loader = new FXMLLoader(getClass.getResource("/timer.fxml"))
-    val timerController = new FXMLTimerController(rootModel)
+    val loader = new FXMLLoader(getClass.getResource("/pomodoro.fxml"))
+    val timerController = new PomodoroControllerImpl(rootModel)
     loader.setController(timerController)
     val vbox = loader.load[VBox]
 
@@ -35,11 +35,5 @@ class LaTomate extends JavaFXApplication {
 
   override def stop() = {
     rootModel.terminate()
-  }
-}
-
-object LaTomate {
-  def run(args: Array[String]) = {
-    JavaFXApplication.launch(classOf[LaTomate], args.toSeq: _*)
   }
 }

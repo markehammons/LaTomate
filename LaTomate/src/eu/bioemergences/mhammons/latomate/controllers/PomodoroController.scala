@@ -1,10 +1,10 @@
 package eu.bioemergences.mhammons.latomate.controllers
 
-import eu.bioemergences.mhammons.latomate.models.TimerModel.TimerModel
+import eu.bioemergences.mhammons.latomate.models.PomodoroModel.TimerModel
 
 import scala.concurrent.duration.FiniteDuration
 
-trait TimerController {
+trait PomodoroController {
   def setModel(tM: TimerModel): Unit
   def disableSnooze(): Unit
   def updateTimer(timeMillis: Long, progress: Double): Unit

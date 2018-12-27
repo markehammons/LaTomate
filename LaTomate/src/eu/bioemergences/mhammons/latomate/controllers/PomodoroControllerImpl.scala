@@ -7,7 +7,7 @@ import eu.bioemergences.mhammons.latomate.models.RootModel.{
   RootModel,
   SpawnTimerModel
 }
-import eu.bioemergences.mhammons.latomate.models.TimerModel._
+import eu.bioemergences.mhammons.latomate.models.PomodoroModel._
 import javafx.application.Platform
 import javafx.fxml.FXML
 import javafx.scene.control.Label
@@ -15,7 +15,7 @@ import javafx.scene.media.AudioClip
 
 import scala.concurrent.duration.FiniteDuration
 
-class FXMLTimerController(rootModel: RootModel) extends TimerController {
+class PomodoroControllerImpl(rootModel: RootModel) extends PomodoroController {
   @FXML
   protected var timeRemaining: Label = _
 

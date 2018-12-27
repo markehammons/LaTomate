@@ -5,8 +5,8 @@ import akka.actor.typed.{ActorRef, Behavior, PostStop}
 
 import scala.concurrent.duration._
 
-object TimerModel {
-  def stopped(state: TimerModelState): Behavior[TimerVocab] = Behaviors.setup {
+object PomodoroModel {
+  def stopped(state: PomodoroModelState): Behavior[TimerVocab] = Behaviors.setup {
     ctx =>
       ctx.log.debug(s"Stopped with state $state")
       state.controller.stopTimer("Stopped")
@@ -25,11 +25,11 @@ object TimerModel {
         }
   }
 
-  def pomodoro(state: TimerModelState) = Behaviors.setup[TimerVocab] { ctx =>
+  def pomodoro(state: PomodoroModelState) = Behaviors.setup[TimerVocab] { ctx =>
     ctx.log.debug(s"Entering a pomodoro with state $state")
     val body = {
       val timer =
-        new TimerOld(state.workDuration,
+        new Timer(state.workDuration,
                   Some(state.warningPoint),
                   state.snoozeLength,
                   state.snoozeLimit)
@@ -83,7 +83,7 @@ object TimerModel {
     }
   }
 
-  def restPeriod(state: TimerModelState) = Behaviors.setup[TimerVocab] { ctx =>
+  def restPeriod(state: PomodoroModelState) = Behaviors.setup[TimerVocab] { ctx =>
     ctx.log.debug(s"Entering rest state with $state")
     val body = {
       val restDuration = if (state.pomodoros < state.pomodorosTillLongRest) {
@@ -92,7 +92,7 @@ object TimerModel {
         state.longRestDuration
       }
 
-      val timer = new TimerOld(restDuration,
+      val timer = new Timer(restDuration,
                             if (restDuration == state.longRestDuration)
                               Some(state.warningPoint)
                             else None,
