@@ -1,15 +1,15 @@
 import $ivy.`com.markehammons::mill-profiler-module:0.0.1-SNAPSHOT`
-
 import mill.define.Target
 import mill.scalalib._
 import mill.util.Loose
 import mill._
 import com.markehammons.mill_profiler._
+import mill.scalalib.scalafmt.ScalafmtModule
 
-object latomate extends SbtModule with YourKitModule {
+object LaTomate extends ScalaModule with YourKitModule with ScalafmtModule {
   def scalaVersion = "2.12.8"
 
-  override def millSourcePath = super.millSourcePath / ammonite.ops.up
+  //override def millSourcePath = super.millSourcePath / ammonite.ops.up
 
   override def disableJavaVersionCheck: Target[Boolean] = true
 
