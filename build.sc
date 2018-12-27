@@ -1,12 +1,24 @@
-import mill._
+import $ivy.`com.markehammons::mill-profiler-module:0.0.1-SNAPSHOT`
+
+
 import mill.define.Target
 import mill.scalalib._
 import mill.util.Loose
+import mill._
+import mill.modules.Jvm
+import mill.scalalib.JavaModule
+import mill.eval.Result
+import com.markehammons.mill_profiler._
 
-object latomate extends SbtModule {
+
+object latomate extends SbtModule with YourKitModule {
   def scalaVersion = "2.12.8"
 
   override def millSourcePath = super.millSourcePath / ammonite.ops.up
+
+  //override def yourKitHome = T { os.home / "bin" / "YourKit-JavaProfiler-2018.04" }
+
+  override def disableJavaVersionCheck: Target[Boolean] = true
 
   override def scalacPluginIvyDeps = Agg(
     ivy"org.scalamacros:::paradise:2.1.1"
@@ -53,6 +65,20 @@ object latomate extends SbtModule {
   override def compileIvyDeps: Target[Loose.Agg[Dep]] = Agg(
     ivy"com.lihaoyi::mill-scalalib:0.3.5"
   )
+
+  override def scalacOptions: Target[Seq[String]] = T {
+    Seq(
+      "-unchecked",
+      "-deprecation",
+      "-encoding", "utf-8",
+      "-explaintypes",
+      "-feature",
+      "-unchecked",
+      "-Xfatal-warnings",
+      "-Xlint"
+    ) ++ super.scalacOptions()
+  }
+
 
   object test extends Tests {
     override def ivyDeps = Agg(
