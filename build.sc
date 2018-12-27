@@ -1,19 +1,15 @@
 import $ivy.`com.markehammons::mill-profiler-module:0.0.1-SNAPSHOT`
 
-
 import mill.define.Target
 import mill.scalalib._
 import mill.util.Loose
 import mill._
 import com.markehammons.mill_profiler._
 
-
 object latomate extends SbtModule with YourKitModule {
   def scalaVersion = "2.12.8"
 
   override def millSourcePath = super.millSourcePath / ammonite.ops.up
-
-  //override def yourKitHome = T { os.home / "bin" / "YourKit-JavaProfiler-2018.04" }
 
   override def disableJavaVersionCheck: Target[Boolean] = true
 
@@ -24,36 +20,36 @@ object latomate extends SbtModule with YourKitModule {
   val circeVersion = "0.10.0"
 
   val circeDeps = Agg(
-    ivy"io.circe::circe-core:$circeVersion",
-    ivy"io.circe::circe-generic:$circeVersion",
-    ivy"io.circe::circe-generic-extras:$circeVersion",
-    ivy"io.circe::circe-parser:$circeVersion"
-  )
+    "circe-core",
+    "circe-generic",
+    "circe-generic-extras",
+    "circe-parser"
+  ).map(name => ivy"io.circe::$name:$circeVersion")
 
   val sttpVersion = "1.5.1"
 
   val sttpDeps = Agg(
-    ivy"com.softwaremill.sttp::core:$sttpVersion",
-    ivy"com.softwaremill.sttp::akka-http-backend:$sttpVersion"
-  )
+    "core",
+    "akka-http-backend"
+  ).map(name => ivy"com.softwaremill.sttp::$name:$sttpVersion")
 
   val akkaVersion = "2.5.19"
 
   val akkaDeps = Agg(
-    ivy"com.typesafe.akka::akka-stream:$akkaVersion",
-    ivy"com.typesafe.akka::akka-actor:$akkaVersion",
-    ivy"com.typesafe.akka::akka-actor-typed:$akkaVersion"
-  )
+    "akka-stream",
+    "akka-actor",
+    "akka-actor-typed"
+  ).map(name => ivy"com.typesafe.akka::$name:$akkaVersion")
 
   val javafxVersion = "11.0.1"
 
   val javafxDeps = Agg(
-    ivy"org.openjfx:javafx-base:$javafxVersion",
-    ivy"org.openjfx:javafx-controls:$javafxVersion",
-    ivy"org.openjfx:javafx-fxml:$javafxVersion",
-    ivy"org.openjfx:javafx-graphics:$javafxVersion",
-    ivy"org.openjfx:javafx-media:$javafxVersion"
-  )
+    "javafx-base",
+    "javafx-controls",
+    "javafx-fxml",
+    "javafx-graphics",
+    "javafx-media"
+  ).map(name => ivy"org.openjfx:$name:$javafxVersion")
 
   override def ivyDeps = javafxDeps ++ akkaDeps ++ sttpDeps ++ circeDeps ++ Agg(
     ivy"com.jfoenix:jfoenix:9.0.8"
@@ -67,7 +63,8 @@ object latomate extends SbtModule with YourKitModule {
     Seq(
       "-unchecked",
       "-deprecation",
-      "-encoding", "utf-8",
+      "-encoding",
+      "utf-8",
       "-explaintypes",
       "-feature",
       "-unchecked",
@@ -75,7 +72,6 @@ object latomate extends SbtModule with YourKitModule {
       "-Xlint"
     ) ++ super.scalacOptions()
   }
-
 
   object test extends Tests {
     override def ivyDeps = Agg(
