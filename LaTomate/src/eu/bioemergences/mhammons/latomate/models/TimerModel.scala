@@ -29,7 +29,7 @@ object TimerModel {
     ctx.log.debug(s"Entering a pomodoro with state $state")
     val body = {
       val timer =
-        new Timer(state.workDuration,
+        new TimerOld(state.workDuration,
                   Some(state.warningPoint),
                   state.snoozeLength,
                   state.snoozeLimit)
@@ -92,7 +92,7 @@ object TimerModel {
         state.longRestDuration
       }
 
-      val timer = new Timer(restDuration,
+      val timer = new TimerOld(restDuration,
                             if (restDuration == state.longRestDuration)
                               Some(state.warningPoint)
                             else None,
