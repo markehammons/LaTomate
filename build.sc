@@ -5,9 +5,6 @@ import mill.define.Target
 import mill.scalalib._
 import mill.util.Loose
 import mill._
-import mill.modules.Jvm
-import mill.scalalib.JavaModule
-import mill.eval.Result
 import com.markehammons.mill_profiler._
 
 
