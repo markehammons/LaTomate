@@ -2,10 +2,10 @@ package eu.bioemergences.mhammons.latomate.models
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-class Timer(private var timerDuration: FiniteDuration,
-            private var warningDurationPoint: Option[FiniteDuration],
-            snoozeDuration: FiniteDuration,
-            private var snoozes: Int) {
+class TimerOld(private var timerDuration: FiniteDuration,
+               private var warningDurationPoint: Option[FiniteDuration],
+               snoozeDuration: FiniteDuration,
+               private var snoozes: Int) {
   def tick(durationSince: FiniteDuration): FiniteDuration = {
     timerDuration -= durationSince
     timerDuration
