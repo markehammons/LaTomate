@@ -5,7 +5,7 @@ import com.jfoenix.controls.{JFXButton, JFXSpinner}
 import eu.bioemergences.mhammons.latomate.Time
 import eu.bioemergences.mhammons.latomate.models.RootModel.{
   RootModel,
-  SpawnTimerModel
+  SpawnPomodoroModel
 }
 import eu.bioemergences.mhammons.latomate.models.PomodoroModel._
 import javafx.application.Platform
@@ -34,7 +34,7 @@ class PomodoroControllerImpl(rootModel: RootModel) extends PomodoroController {
   @FXML
   protected var startButton: JFXButton = _
 
-  private var timerModel: Option[ActorRef[TimerVocab]] = None
+  private var pomodoroModel: Option[PomodoroModelRef] = None
 
   private val warningTone: AudioClip = new AudioClip(
     getClass.getClassLoader.getResource("Metronome.wav").toExternalForm)
@@ -44,27 +44,27 @@ class PomodoroControllerImpl(rootModel: RootModel) extends PomodoroController {
 
   @FXML
   protected[controllers] def stop() = {
-    timerModel.foreach(_ ! Stop)
+    pomodoroModel.foreach(_ ! Stop)
   }
 
   @FXML
   protected[controllers] def snooze() = {
-    timerModel.foreach(_ ! Snooze)
+    pomodoroModel.foreach(_ ! Snooze)
   }
 
   @FXML
   protected[controllers] def start() = {
-    timerModel.foreach(_ ! Start)
+    pomodoroModel.foreach(_ ! Start)
   }
 
   @FXML
   protected[controllers] def initialize() = {
-    rootModel ! SpawnTimerModel(this)
+    rootModel ! SpawnPomodoroModel(this)
   }
 
-  def setModel(tM: TimerModel) =
+  def setModel(tM: PomodoroModelRef) =
     Platform.runLater(() => {
-      timerModel = Some(tM)
+      pomodoroModel = Some(tM)
     })
 
   def disableSnooze() =

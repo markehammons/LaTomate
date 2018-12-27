@@ -6,13 +6,13 @@ import akka.actor.typed.{ActorRef, Behavior, PostStop}
 import scala.concurrent.duration._
 
 object PomodoroModel {
-  def stopped(state: PomodoroModelState): Behavior[TimerVocab] = Behaviors.setup {
+  def stopped(state: PomodoroModelState): Behavior[PomodoroVocab] = Behaviors.setup {
     ctx =>
       ctx.log.debug(s"Stopped with state $state")
       state.controller.stopTimer("Stopped")
 
       Behaviors
-        .receiveMessagePartial[TimerVocab] {
+        .receiveMessagePartial[PomodoroVocab] {
           case Start =>
             pomodoro(state)
           case Shutdown =>
@@ -25,7 +25,7 @@ object PomodoroModel {
         }
   }
 
-  def pomodoro(state: PomodoroModelState) = Behaviors.setup[TimerVocab] { ctx =>
+  def pomodoro(state: PomodoroModelState) = Behaviors.setup[PomodoroVocab] { ctx =>
     ctx.log.debug(s"Entering a pomodoro with state $state")
     val body = {
       val timer =
@@ -37,7 +37,7 @@ object PomodoroModel {
       state.controller.startWork("Pomodoro", state.workDuration)
 
       Behaviors
-        .receiveMessagePartial[TimerVocab] {
+        .receiveMessagePartial[PomodoroVocab] {
           case Tick =>
             timer.tick(state.tickPeriod)
             if (timer.isComplete()) {
@@ -74,7 +74,7 @@ object PomodoroModel {
     }
 
     if (state.withScheduling) {
-      Behaviors.withTimers[TimerVocab] { scheduler =>
+      Behaviors.withTimers[PomodoroVocab] { scheduler =>
         scheduler.startPeriodicTimer(TickKey, Tick, state.tickPeriod)
         body
       }
@@ -83,7 +83,7 @@ object PomodoroModel {
     }
   }
 
-  def restPeriod(state: PomodoroModelState) = Behaviors.setup[TimerVocab] { ctx =>
+  def restPeriod(state: PomodoroModelState) = Behaviors.setup[PomodoroVocab] { ctx =>
     ctx.log.debug(s"Entering rest state with $state")
     val body = {
       val restDuration = if (state.pomodoros < state.pomodorosTillLongRest) {
@@ -110,7 +110,7 @@ object PomodoroModel {
       }
 
       Behaviors
-        .receiveMessagePartial[TimerVocab] {
+        .receiveMessagePartial[PomodoroVocab] {
           case Tick =>
             timer.tick(state.tickPeriod)
             if (timer.isComplete()) {
@@ -141,7 +141,7 @@ object PomodoroModel {
     }
 
     if (state.withScheduling) {
-      Behaviors.withTimers[TimerVocab] { scheduler =>
+      Behaviors.withTimers[PomodoroVocab] { scheduler =>
         scheduler.startPeriodicTimer(TickKey, Tick, state.tickPeriod)
         body
       }
@@ -150,15 +150,15 @@ object PomodoroModel {
     }
   }
 
-  type TimerModel = ActorRef[TimerVocab]
+  type PomodoroModelRef = ActorRef[PomodoroVocab]
 
-  sealed trait TimerVocab
+  sealed trait PomodoroVocab
 
-  case object Start extends TimerVocab
-  case object Stop extends TimerVocab
-  case object Snooze extends TimerVocab
-  case object Tick extends TimerVocab
-  case object Shutdown extends TimerVocab
+  case object Start extends PomodoroVocab
+  case object Stop extends PomodoroVocab
+  case object Snooze extends PomodoroVocab
+  case object Tick extends PomodoroVocab
+  case object Shutdown extends PomodoroVocab
 
-  case object TickKey
+  private case object TickKey
 }

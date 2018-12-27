@@ -8,7 +8,7 @@ object RootModel {
   def init: Behavior[RootVocabulary] =
     Behaviors
       .receive[RootVocabulary] {
-        case (context, SpawnTimerModel(controller)) =>
+        case (context, SpawnPomodoroModel(controller)) =>
           val timerModelState = PomodoroModelState(true, 0, controller)
           controller.setModel(
             context.spawn(PomodoroModel.stopped(timerModelState), "PomodoroModel"))
@@ -22,7 +22,7 @@ object RootModel {
 
   sealed trait RootVocabulary
 
-  final case class SpawnTimerModel(controller: PomodoroControllerImpl)
+  final case class SpawnPomodoroModel(controller: PomodoroControllerImpl)
       extends RootVocabulary
 
   type RootModel = ActorRef[RootVocabulary]
