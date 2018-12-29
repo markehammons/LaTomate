@@ -1,6 +1,5 @@
 package eu.bioemergences.mhammons.latomate.controllers
 
-import akka.actor.typed.ActorRef
 import com.jfoenix.controls.{JFXButton, JFXSpinner}
 import eu.bioemergences.mhammons.latomate.Time
 import eu.bioemergences.mhammons.latomate.models.RootModel.{
