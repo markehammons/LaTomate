@@ -41,6 +41,8 @@ trait StatefulTypedActor[State, Request] {
     }.receiveSignal(genericSignalHandler)
   }
 
+  protected def predefined(implicit state: State) = Behaviors.receiveMessage(genericHandler).receiveSignal(genericSignalHandler)
+
 
   protected def genericSignalHandler(implicit state: State): PartialFunction[(ActorContext[Request], Signal), Behavior[Request]]
 

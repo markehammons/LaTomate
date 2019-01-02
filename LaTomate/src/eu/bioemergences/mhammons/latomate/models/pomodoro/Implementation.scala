@@ -6,12 +6,11 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{Behavior, PostStop, Signal}
 import eu.bioemergences.mhammons.latomate.controllers.PomodoroController
 import eu.bioemergences.mhammons.latomate.models.StatefulTypedActor
-import eu.bioemergences.mhammons.latomate.models.timer.Timer
-import eu.bioemergences.mhammons.latomate.models.timer.Timer.{Complete, Update, Warning}
+import eu.bioemergences.mhammons.latomate.models.timer
 
 import scala.concurrent.duration._
 
-case object Impl extends Model with StatefulTypedActor[State, Request] {
+case object Implementation extends Interface with StatefulTypedActor[State, Request] {
   def init(controller: PomodoroController,
            configuration: Configuration): Behavior[Request] = Behaviors.setup {
     ctx =>
@@ -34,25 +33,25 @@ case object Impl extends Model with StatefulTypedActor[State, Request] {
       ctx.log.info("starting pomodoro")
       state.controller.startWork("Pomodoro", state.workDuration)
       state.pomodoros += 1
-      val timer = ctx.spawn(state.timer.init(state.workDuration,
+      val pomodoroTimer = ctx.spawn(state.timerImplementation.init(state.workDuration,
                                              state.warningPoint,
                                              state.tickPeriod,
                                              Some(state.timerInterface)),
                             s"pomodoro-timer-${UUID.randomUUID()}")
       var snoozes = 0
-      timer ! Timer.Start
+      pomodoroTimer ! timer.Start
 
 
       receiveMessagePartial {
         case TimerResponse(timerMessage) =>
           timerMessage match {
-            case Update(timeLeft, percentTimeRemaining) =>
+            case timer.Update(timeLeft, percentTimeRemaining) =>
               state.controller.updateTimer(timeLeft, percentTimeRemaining)
               Behaviors.same
-            case Complete(_) =>
+            case timer.Complete(_) =>
               state.controller.periodCompleteNotification()
               rest
-            case Warning(_) =>
+            case timer.Warning(_) =>
               state.controller.periodEndingNotification()
               Behaviors.same
           }
@@ -61,7 +60,7 @@ case object Impl extends Model with StatefulTypedActor[State, Request] {
         case Snooze =>
           if (snoozes < state.snoozeLimit) {
             snoozes += 1
-            timer ! Timer.AdjustDuration(state.snoozeLength)
+            pomodoroTimer ! timer.AdjustDuration(state.snoozeLength)
           }
           Behaviors.same
       }
@@ -84,24 +83,24 @@ case object Impl extends Model with StatefulTypedActor[State, Request] {
         else
           state.warningPoint
 
-      val timer = ctx.spawn(state.timer.init(restDuration,
+      val restTimer = ctx.spawn(state.timerImplementation.init(restDuration,
                                              warningPoint,
                                              state.tickPeriod,
                                              Some(state.timerInterface)),
                             s"rest-timer-${UUID.randomUUID()}")
 
-      timer ! Timer.Start
+      restTimer ! timer.Start
 
       receiveMessagePartial {
         case TimerResponse(tM) =>
           tM match {
-            case Update(timeLeft, percentTimeRemaining) =>
+            case timer.Update(timeLeft, percentTimeRemaining) =>
               state.controller.updateTimer(timeLeft, percentTimeRemaining)
               Behaviors.same
-            case Warning(_) =>
+            case timer.Warning(_) =>
               state.controller.periodEndingNotification()
               Behaviors.same
-            case Complete(_) =>
+            case timer.Complete(_) =>
               state.controller.periodCompleteNotification()
               stopped
           }

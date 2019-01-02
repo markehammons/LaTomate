@@ -1,11 +1,11 @@
 package eu.bioemergences.mhammons.latomate.models.pomodoro
 
-import eu.bioemergences.mhammons.latomate.models.timer.{Timer, TimerImpl}
+import eu.bioemergences.mhammons.latomate.models.timer
 
 import scala.concurrent.duration._
 
 case class Configuration(pomodoros: Int,
-                         timer: Timer,
+                         timerImplementation: timer.Interface,
                          snoozeLimit: Int,
                          snoozeLength: FiniteDuration,
                          tickPeriod: FiniteDuration,
@@ -18,7 +18,7 @@ case class Configuration(pomodoros: Int,
 object Configuration {
   def default = Configuration(
     pomodoros = 4,
-    timer = TimerImpl,
+    timerImplementation = timer.Implementation,
     snoozeLimit = 1,
     snoozeLength = 5.minutes,
     tickPeriod = 200.millis,

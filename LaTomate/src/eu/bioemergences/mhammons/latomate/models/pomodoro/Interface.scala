@@ -3,7 +3,7 @@ package eu.bioemergences.mhammons.latomate.models.pomodoro
 import akka.actor.typed.Behavior
 import eu.bioemergences.mhammons.latomate.controllers.PomodoroController
 
-private[pomodoro] trait Model {
+private[pomodoro] trait Interface {
 
   def init(controller: PomodoroController,
            configuration: Configuration): Behavior[Request]

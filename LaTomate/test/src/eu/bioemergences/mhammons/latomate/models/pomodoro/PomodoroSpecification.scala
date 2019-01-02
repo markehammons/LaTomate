@@ -6,8 +6,7 @@ import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
 import eu.bioemergences.mhammons.latomate.controllers.PomodoroController
 import eu.bioemergences.mhammons.latomate.models.pomodoro
-import eu.bioemergences.mhammons.latomate.models.timer.Timer
-import eu.bioemergences.mhammons.latomate.models.timer.Timer.{Complete, Update}
+import eu.bioemergences.mhammons.latomate.models.timer
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{DiagrammedAssertions, WordSpec}
 
@@ -18,8 +17,8 @@ class PomodoroSpecification
     with DiagrammedAssertions
     with MockFactory {
 
-  val nullActor: Behavior[Timer.Request] = Behaviors.receiveMessage {
-    case Timer.Shutdown => Behaviors.stopped
+  val nullActor: Behavior[timer.Request] = Behaviors.receiveMessage {
+    case timer.Shutdown => Behaviors.stopped
     case _ => Behaviors.same
   }
 
@@ -27,27 +26,27 @@ class PomodoroSpecification
     "handle the start phase properly in all aspects" in {
       val mockController = stub[PomodoroController]
 
-      val mockTimer = stub[Timer]
+      val mockTimer = stub[timer.Interface]
 
       val workDuration = 25.minutes
 
-      (mockTimer.init _).when(where { case (_, _, _, _) => true }).returns(nullActor)
+      (mockTimer.init _).when(where { case _ => true }).returns(nullActor)
 
       val timerModel = BehaviorTestKit(
-        pomodoro.defaultModel.init(mockController, Configuration.default.copy(timer = mockTimer)))
+        pomodoro.defaultModel.init(mockController, Configuration.default.copy(timerImplementation = mockTimer)))
 
-      val ma = timerModel.expectEffectType[MessageAdapter[Timer.Response, TimerResponse]]
+      val ma = timerModel.expectEffectType[MessageAdapter[timer.Response, TimerResponse]]
 
       timerModel.run(Start)
-      val childMailbox = timerModel.childTestKit(timerModel.expectEffectType[Spawned[Timer.Request]].ref).selfInbox()
+      val childMailbox = timerModel.childTestKit(timerModel.expectEffectType[Spawned[timer.Request]].ref).selfInbox()
 
-      childMailbox.expectMessage(Timer.Start)
+      childMailbox.expectMessage(timer.Start)
 
-      (0 to 24).map(_.minute).reverse.foreach(t => timerModel.run(ma.adapt(Update(t, t/workDuration))))
+      (0 to 24).map(_.minute).reverse.foreach(t => timerModel.run(ma.adapt(timer.Update(t, t/workDuration))))
 
       timerModel.run(Snooze)
 
-      childMailbox.expectMessage(Timer.AdjustDuration(5.minutes))
+      childMailbox.expectMessage(timer.AdjustDuration(5.minutes))
 
       timerModel.run(Stop)
 
@@ -70,12 +69,12 @@ class PomodoroSpecification
     "cycle through its states appropriately" in {
       val mockController = stub[PomodoroController]
 
-      val mockTimer = stub[Timer]
+      val mockTimer = stub[timer.Interface]
 
       (mockTimer.init _).when(where { case _ => true }).returns(nullActor)
 
       val timerModel = BehaviorTestKit(
-        pomodoro.defaultModel.init(mockController, Configuration.default.copy(timer = mockTimer))
+        pomodoro.defaultModel.init(mockController, Configuration.default.copy(timerImplementation = mockTimer))
       )
 
       val stateMailbox = TestInbox[State]()
@@ -84,18 +83,18 @@ class PomodoroSpecification
 
       val state = stateMailbox.receiveMessage()
 
-      val ma = timerModel.expectEffectType[MessageAdapter[Timer.Response, TimerResponse]]
+      val ma = timerModel.expectEffectType[MessageAdapter[timer.Response, TimerResponse]]
 
       for(_ <- 0 until Configuration.default.pomodoros) {
         timerModel.run(Start)
 
-        val pTMailbox = timerModel.childTestKit(timerModel.expectEffectType[Spawned[Timer.Request]].ref).selfInbox()
-        pTMailbox.expectMessage(Timer.Start)
-        timerModel.run(ma.adapt(Complete(Duration.Zero)))
+        val pTMailbox = timerModel.childTestKit(timerModel.expectEffectType[Spawned[timer.Request]].ref).selfInbox()
+        pTMailbox.expectMessage(timer.Start)
+        timerModel.run(ma.adapt(timer.Complete(Duration.Zero)))
 
-        val rTMailbox = timerModel.childTestKit(timerModel.expectEffectType[Spawned[Timer.Request]].ref).selfInbox()
-        rTMailbox.expectMessage(Timer.Start)
-        timerModel.run(ma.adapt(Complete(Duration.Zero)))
+        val rTMailbox = timerModel.childTestKit(timerModel.expectEffectType[Spawned[timer.Request]].ref).selfInbox()
+        rTMailbox.expectMessage(timer.Start)
+        timerModel.run(ma.adapt(timer.Complete(Duration.Zero)))
       }
 
       (mockTimer.init _).verify(state.workDuration, state.warningPoint, state.tickPeriod, Some(state.timerInterface)).repeat(4)

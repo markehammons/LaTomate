@@ -1,11 +1,11 @@
 package eu.bioemergences.mhammons.latomate.models.pomodoro
 
 import eu.bioemergences.mhammons.latomate.controllers.PomodoroController
-import eu.bioemergences.mhammons.latomate.models.timer.Timer
+import eu.bioemergences.mhammons.latomate.models.timer
 
 import scala.concurrent.duration._
 
-private[pomodoro] class State(val timerInterface: Timer.Respondee,
+private[pomodoro] class State(val timerInterface: timer.Respondee,
                               val controller: PomodoroController,
                               configuration: Configuration) {
 
@@ -18,5 +18,5 @@ private[pomodoro] class State(val timerInterface: Timer.Respondee,
   var longRestDuration: FiniteDuration = configuration.longRestDuration
   var warningPoint: FiniteDuration = configuration.warningPoint
   var pomodorosTillLongRest: Int = configuration.pomodorosTillLongRest
-  val timer: Timer = configuration.timer
+  val timerImplementation: timer.Interface = configuration.timerImplementation
 }

@@ -4,20 +4,20 @@ import java.util.UUID
 
 import akka.actor.testkit.typed.scaladsl.{ManualTime, ScalaTestWithActorTestKit, TestProbe}
 import com.typesafe.config.ConfigValueFactory
-import eu.bioemergences.mhammons.latomate.models.timer.Timer._
+import eu.bioemergences.mhammons.latomate.models.timer
 import org.scalatest.{DiagrammedAssertions, WordSpecLike}
 
 import scala.concurrent.duration._
 
-class TimerImplSpecification
+class TimerSpecification
     extends ScalaTestWithActorTestKit(ManualTime.config.withValue("akka.log-dead-letters", ConfigValueFactory.fromAnyRef("off")))
     with WordSpecLike
     with DiagrammedAssertions {
   val manualTime = ManualTime()
 
   def createTimer() = {
-    val receiver = TestProbe[Timer.Response]
-    spawn(TimerImpl.init(25.minutes, 5.minutes, 1.minute, Some(receiver.ref)),
+    val receiver = TestProbe[timer.Response]
+    spawn(Implementation.init(25.minutes, 5.minutes, 1.minute, Some(receiver.ref)),
           s"TimerImpl-${UUID.randomUUID()}") -> receiver
   }
 
