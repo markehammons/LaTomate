@@ -3,13 +3,14 @@ package eu.bioemergences.mhammons.latomate.models.timer
 import java.util.UUID
 
 import akka.actor.testkit.typed.scaladsl.{ManualTime, ScalaTestWithActorTestKit, TestProbe}
+import com.typesafe.config.ConfigValueFactory
 import eu.bioemergences.mhammons.latomate.models.timer.Timer._
 import org.scalatest.{DiagrammedAssertions, WordSpecLike}
 
 import scala.concurrent.duration._
 
 class TimerImplSpecification
-    extends ScalaTestWithActorTestKit(ManualTime.config)
+    extends ScalaTestWithActorTestKit(ManualTime.config.withValue("akka.log-dead-letters", ConfigValueFactory.fromAnyRef("off")))
     with WordSpecLike
     with DiagrammedAssertions {
   val manualTime = ManualTime()
@@ -29,8 +30,6 @@ class TimerImplSpecification
       cTimerImpl ! Stop(receiver.ref)
 
       receiver.expectMessage(Complete(25.minutes))
-
-      Thread.sleep(200)
     }
 
     "send time updates periodically after start has been received" in {
@@ -45,8 +44,6 @@ class TimerImplSpecification
       cTimerImpl ! Stop(receiver.ref)
 
       receiver.expectMessage(Complete(24.minute))
-
-      Thread.sleep(200)
     }
 
     "send a completion signal after time's up" in {
@@ -68,8 +65,6 @@ class TimerImplSpecification
         case Complete(_) => true
         case _           => false
       } == 1)
-
-      Thread.sleep(200)
     }
 
     "adjust time successfully" in {
@@ -80,8 +75,6 @@ class TimerImplSpecification
       cTimerImpl ! Stop(receiver.ref)
 
       receiver.expectMessage(Complete(30.minutes))
-
-      Thread.sleep(200)
     }
 
     "change and re-enable warning point" in {
@@ -107,8 +100,6 @@ class TimerImplSpecification
       cTimerImpl ! Stop(receiver.ref)
 
       receiver.expectMessage(Complete(3.minutes))
-
-      Thread.sleep(200)
     }
   }
 

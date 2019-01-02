@@ -10,6 +10,8 @@ trait Timer {
            tickResolution: FiniteDuration,
            updatesReceiver: Option[Timer.Respondee]): Behavior[Timer.Request]
 
+  def stopped(timerState: TimerState): Behavior[Timer.Request]
+
   def preWarn(timerState: TimerState): Behavior[Timer.Request]
 
   def postWarn(timerState: TimerState): Behavior[Timer.Request]
@@ -25,6 +27,7 @@ object Timer {
   case object ReenableWarning extends Request
   case class AdjustDuration(adjustment: FiniteDuration) extends Request
   private[timer] case object Tick extends Request
+  case object Shutdown extends Request
 
   sealed trait Response
 

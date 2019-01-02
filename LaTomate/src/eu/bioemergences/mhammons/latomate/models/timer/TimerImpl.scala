@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{Behavior, PostStop}
 import eu.bioemergences.mhammons.latomate.models.timer.Timer.{Tick, _}
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration._
 
 case object TimerImpl extends Timer {
   override def init(
@@ -18,7 +18,9 @@ case object TimerImpl extends Timer {
                                  warningPoint,
                                  tickResolution,
                                  updateReceiver,
-                                 scheduler)
+                                 scheduler,
+        ctx.self.path
+      )
 
       receive(state) { (_, message) =>
         message match {
@@ -32,6 +34,15 @@ case object TimerImpl extends Timer {
         }
       }
     }}
+
+  override def stopped(timerState: TimerState): Behavior[Request] = Behaviors.setup{ ctx =>
+    timerState.scheduler.cancelAll()
+
+    ctx.setReceiveTimeout(timerState.tickResolution + 1.minute, Shutdown)
+    receiveMessage(timerState) {
+      case m => genericMessageHandler(timerState)(m)
+    }
+  }
 
   override def preWarn(timerState: TimerState): Behavior[Timer.Request] =
     receiveMessage(timerState) {
@@ -55,7 +66,7 @@ case object TimerImpl extends Timer {
             genericTickHandling(timerState)
             if (timerState.remainingTime == Duration.Zero) {
               timerState.updateReceiver.foreach(_ ! Complete(Duration.Zero))
-              Behaviors.stopped
+              stopped(timerState)
             } else {
               Behaviors.same
             }
@@ -83,7 +94,7 @@ case object TimerImpl extends Timer {
         state.updateReceiver.foreach(_ ! Complete(state.remainingTime))
       }
       respondee ! Complete(state.remainingTime)
-      Behaviors.stopped
+      stopped(state)
 
     case Tick =>
       Behaviors.unhandled
@@ -102,6 +113,9 @@ case object TimerImpl extends Timer {
       state.timerDuration += adjustment
       state.remainingTime += adjustment
       Behaviors.same
+
+    case Shutdown =>
+      Behaviors.stopped
   }
 
   private def postStopHandling(state: TimerState)(
@@ -111,9 +125,6 @@ case object TimerImpl extends Timer {
         ctx.log.info("Stopping")
         state.updateReceiver.foreach(_ ! Complete(state.remainingTime))
         state.scheduler.cancel(TickKey(ctx.self.path))
-        while(state.scheduler.isTimerActive(TickKey(ctx.self.path))) {
-          Thread.sleep(5)
-        }
         Behaviors.stopped
     }
   }

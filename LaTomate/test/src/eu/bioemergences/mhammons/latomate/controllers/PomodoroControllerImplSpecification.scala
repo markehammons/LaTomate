@@ -5,12 +5,7 @@ import eu.bioemergences.mhammons.latomate.models.RootModel.{
   RootVocabulary,
   SpawnPomodoroModel
 }
-import eu.bioemergences.mhammons.latomate.models.PomodoroModel.{
-  Snooze,
-  Start,
-  Stop,
-  PomodoroVocab
-}
+import eu.bioemergences.mhammons.latomate.models.pomodoro
 import javafx.application.Platform
 import org.scalatest.{BeforeAndAfterAll, DiagrammedAssertions, WordSpec}
 
@@ -21,7 +16,7 @@ class PomodoroControllerImplSpecification
 
   val rootMailbox = TestInbox[RootVocabulary]()
 
-  val pomodoroMailbox = TestInbox[PomodoroVocab]()
+  val pomodoroMailbox = TestInbox[pomodoro.Request]()
 
   val pomodoroControllerImpl = new PomodoroControllerImpl(rootMailbox.ref)
 
@@ -41,19 +36,19 @@ class PomodoroControllerImplSpecification
     "send a start message on start function activation" in {
       pomodoroControllerImpl.start()
 
-      pomodoroMailbox.expectMessage(Start)
+      pomodoroMailbox.expectMessage(pomodoro.Start)
     }
 
     "send a snooze message on snooze function activation" in {
       pomodoroControllerImpl.snooze()
 
-      pomodoroMailbox.expectMessage(Snooze)
+      pomodoroMailbox.expectMessage(pomodoro.Snooze)
     }
 
     "send a stop message on stop function activation" in {
       pomodoroControllerImpl.stop()
 
-      pomodoroMailbox.expectMessage(Stop)
+      pomodoroMailbox.expectMessage(pomodoro.Stop)
     }
   }
 
