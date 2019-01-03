@@ -10,7 +10,9 @@ import eu.bioemergences.mhammons.latomate.models.timer
 
 import scala.concurrent.duration._
 
-case object Implementation extends Interface with StatefulTypedActor[State, Request] {
+case object Implementation
+    extends Interface
+    with StatefulTypedActor[State, Request] {
   def init(controller: PomodoroController,
            configuration: Configuration): Behavior[Request] = Behaviors.setup {
     ctx =>
@@ -33,14 +35,15 @@ case object Implementation extends Interface with StatefulTypedActor[State, Requ
       ctx.log.info("starting pomodoro")
       state.controller.startWork("Pomodoro", state.workDuration)
       state.pomodoros += 1
-      val pomodoroTimer = ctx.spawn(state.timerImplementation.init(state.workDuration,
-                                             state.warningPoint,
-                                             state.tickPeriod,
-                                             Some(state.timerInterface)),
-                            s"pomodoro-timer-${UUID.randomUUID()}")
+      val pomodoroTimer = ctx.spawn(
+        state.timerImplementation.init(state.workDuration,
+                                       state.warningPoint,
+                                       state.tickPeriod,
+                                       Some(state.timerInterface)),
+        s"pomodoro-timer-${UUID.randomUUID()}"
+      )
       var snoozes = 0
       pomodoroTimer ! timer.Start
-
 
       receiveMessagePartial {
         case TimerResponse(timerMessage) =>
@@ -64,7 +67,7 @@ case object Implementation extends Interface with StatefulTypedActor[State, Requ
             snoozes += 1
             pomodoroTimer ! timer.AdjustDuration(state.snoozeLength)
 
-            if(snoozes == state.snoozeLimit) {
+            if (snoozes == state.snoozeLimit) {
               state.controller.disableSnooze()
             }
           }
@@ -89,11 +92,12 @@ case object Implementation extends Interface with StatefulTypedActor[State, Requ
         else
           state.warningPoint
 
-      val restTimer = ctx.spawn(state.timerImplementation.init(restDuration,
-                                             warningPoint,
-                                             state.tickPeriod,
-                                             Some(state.timerInterface)),
-                            s"rest-timer-${UUID.randomUUID()}")
+      val restTimer =
+        ctx.spawn(state.timerImplementation.init(restDuration,
+                                                 warningPoint,
+                                                 state.tickPeriod,
+                                                 Some(state.timerInterface)),
+                  s"rest-timer-${UUID.randomUUID()}")
 
       restTimer ! timer.Start
 
@@ -126,7 +130,7 @@ case object Implementation extends Interface with StatefulTypedActor[State, Requ
 
   override protected def genericHandler(request: Request)(
       implicit state: State): Behavior[Request] = request match {
-    case Stop     =>
+    case Stop =>
       stopped
     case Shutdown => Behaviors.stopped
     case GetState(requester) =>

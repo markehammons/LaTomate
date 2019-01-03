@@ -9,6 +9,7 @@ case object Start extends Request
 case object Stop extends Request
 case object Snooze extends Request
 case object Shutdown extends Request
-private[pomodoro] case class GetState(requester: ActorRef[State]) extends Request
+private[pomodoro] case class GetState(requester: ActorRef[State])
+    extends Request
 
 case class TimerResponse(response: timer.Response) extends Request

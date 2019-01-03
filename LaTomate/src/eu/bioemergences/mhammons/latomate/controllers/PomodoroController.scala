@@ -1,6 +1,5 @@
 package eu.bioemergences.mhammons.latomate.controllers
 
-
 import eu.bioemergences.mhammons.latomate.models._
 
 import scala.concurrent.duration.FiniteDuration
