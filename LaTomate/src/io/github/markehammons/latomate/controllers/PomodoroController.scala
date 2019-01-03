@@ -6,6 +6,7 @@ import scala.concurrent.duration.FiniteDuration
 
 trait PomodoroController {
   def setModel(tM: pomodoro.Requestee): Unit
+  protected def bootModel(): Unit
   def disableSnooze(): Unit
   def updateTimer(timeLeft: FiniteDuration, progress: Double): Unit
   def startBreak(statusMessage: String, duration: FiniteDuration): Unit

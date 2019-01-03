@@ -84,7 +84,7 @@ case object Implementation
   override protected def genericSignalHandler(implicit state: State)
     : PartialFunction[(ActorContext[Request], Signal), Behavior[Request]] = {
     case (ctx, PostStop) =>
-      ctx.log.info("Stopping")
+      ctx.log.debug("Stopping")
       state.updateReceiver.foreach(_ ! Complete(state.remainingTime))
       state.scheduler.cancel(TickKey(state.path))
       Behaviors.stopped

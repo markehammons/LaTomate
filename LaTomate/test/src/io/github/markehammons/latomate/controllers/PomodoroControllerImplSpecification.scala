@@ -3,8 +3,6 @@ package io.github.markehammons.latomate.controllers
 import akka.actor.testkit.typed.scaladsl.TestInbox
 import io.github.markehammons.latomate.models.RootModel.{RootVocabulary, SpawnPomodoroModel}
 import io.github.markehammons.latomate.models.pomodoro
-import io.github.markehammons.latomate.tags.GUI
-import javafx.application.Platform
 import org.scalatest.fixture.WordSpec
 import org.scalatest.{BeforeAndAfterAll, DiagrammedAssertions, Outcome}
 
@@ -23,31 +21,30 @@ class PomodoroControllerImplSpecification
     super.withFixture(test.toNoArgTest(param))
   }
 
-  override def beforeAll(): Unit = {
-    Platform.startup(() => ())
-  }
-
 
   "An FXMLPomodoroControllerImpl" should {
     "request a timer model from the root model on start" in { p =>
-      p.pomodoroControllerImpl.initialize()
+      p.pomodoroControllerImpl.bootModel()
 
       p.rootMailbox.expectMessage(SpawnPomodoroModel(p.pomodoroControllerImpl))
     }
 
     "send a start message on start function activation" in { p =>
+      p.pomodoroControllerImpl.bootModel()
       p.pomodoroControllerImpl.start()
 
       p.pomodoroMailbox.expectMessage(pomodoro.Start)
     }
 
     "send a snooze message on snooze function activation" in { p =>
+      p.pomodoroControllerImpl.bootModel()
       p.pomodoroControllerImpl.snooze()
 
       p.pomodoroMailbox.expectMessage(pomodoro.Snooze)
     }
 
     "send a stop message on stop function activation" in { p =>
+      p.pomodoroControllerImpl.bootModel()
       p.pomodoroControllerImpl.stop()
 
       p.pomodoroMailbox.expectMessage(pomodoro.Stop)

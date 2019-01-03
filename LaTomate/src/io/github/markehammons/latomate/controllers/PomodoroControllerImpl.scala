@@ -57,14 +57,17 @@ class PomodoroControllerImpl(rootModel: RootModel) extends PomodoroController {
   }
 
   @FXML
-  protected[controllers] def initialize() = {
-    rootModel ! SpawnPomodoroModel(this)
+  protected def initialize() = {
+    bootModel()
   }
 
-  def setModel(tM: pomodoro.Requestee) =
-    Platform.runLater(() => {
-      pomodoroModel = Some(tM)
-    })
+  def setModel(tM: pomodoro.Requestee) = synchronized {
+    pomodoroModel = Some(tM)
+  }
+
+  protected[controllers] def bootModel(): Unit = {
+    rootModel ! SpawnPomodoroModel(this)
+  }
 
   def disableSnooze() =
     Platform.runLater(() => {
