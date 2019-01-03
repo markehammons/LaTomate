@@ -5,7 +5,7 @@ sudo: required
 matrix:
   include:
   - stage: test
-    env: CI_SCRIPT="mill LaTomate.test"
+    env: CI_SCRIPT="mill LaTomate.test -l io.github.markehammons.latomate.tags.GUI"
     jdk: openjdk11
     
 before_script:
