@@ -5,48 +5,52 @@ import io.github.markehammons.latomate.models.RootModel.{RootVocabulary, SpawnPo
 import io.github.markehammons.latomate.models.pomodoro
 import io.github.markehammons.latomate.tags.GUI
 import javafx.application.Platform
-import org.scalatest.{BeforeAndAfterAll, DiagrammedAssertions, WordSpec}
+import org.scalatest.fixture.WordSpec
+import org.scalatest.{BeforeAndAfterAll, DiagrammedAssertions, Outcome}
 
 class PomodoroControllerImplSpecification
     extends WordSpec
     with DiagrammedAssertions
     with BeforeAndAfterAll {
 
-  val rootMailbox = TestInbox[RootVocabulary]()
+  case class FixtureParam(rootMailbox: TestInbox[RootVocabulary], pomodoroMailbox: TestInbox[pomodoro.Request]) {
+    val pomodoroControllerImpl = new PomodoroControllerImpl(rootMailbox.ref)
 
-  val pomodoroMailbox = TestInbox[pomodoro.Request]()
+    pomodoroControllerImpl.setModel(pomodoroMailbox.ref)
+  }
+  override def withFixture(test: OneArgTest): Outcome = {
+    val param = FixtureParam(TestInbox[RootVocabulary](), TestInbox[pomodoro.Request]())
+    super.withFixture(test.toNoArgTest(param))
+  }
 
-  val pomodoroControllerImpl = new PomodoroControllerImpl(rootMailbox.ref)
+  override def beforeAll(): Unit = {
+    Platform.startup(() => ())
+  }
 
-  Platform.startup(() => ())
-
-  pomodoroControllerImpl.setModel(pomodoroMailbox.ref)
-
-  Thread.sleep(150)
 
   "An FXMLPomodoroControllerImpl" should {
-    "request a timer model from the root model on start" taggedAs GUI in {
-      pomodoroControllerImpl.initialize()
+    "request a timer model from the root model on start" in { p =>
+      p.pomodoroControllerImpl.initialize()
 
-      rootMailbox.expectMessage(SpawnPomodoroModel(pomodoroControllerImpl))
+      p.rootMailbox.expectMessage(SpawnPomodoroModel(p.pomodoroControllerImpl))
     }
 
-    "send a start message on start function activation" taggedAs GUI in {
-      pomodoroControllerImpl.start()
+    "send a start message on start function activation" in { p =>
+      p.pomodoroControllerImpl.start()
 
-      pomodoroMailbox.expectMessage(pomodoro.Start)
+      p.pomodoroMailbox.expectMessage(pomodoro.Start)
     }
 
-    "send a snooze message on snooze function activation" taggedAs GUI in {
-      pomodoroControllerImpl.snooze()
+    "send a snooze message on snooze function activation" in { p =>
+      p.pomodoroControllerImpl.snooze()
 
-      pomodoroMailbox.expectMessage(pomodoro.Snooze)
+      p.pomodoroMailbox.expectMessage(pomodoro.Snooze)
     }
 
-    "send a stop message on stop function activation" taggedAs GUI in {
-      pomodoroControllerImpl.stop()
+    "send a stop message on stop function activation" in { p =>
+      p.pomodoroControllerImpl.stop()
 
-      pomodoroMailbox.expectMessage(pomodoro.Stop)
+      p.pomodoroMailbox.expectMessage(pomodoro.Stop)
     }
   }
 
