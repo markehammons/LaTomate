@@ -1,0 +1,11 @@
+stages:
+  - test
+
+before_script:
+  - jabba install zulu@1.11.0-1
+
+test:
+  stage: test
+  script:
+    - mill clean
+    - mill LaTomate.test
