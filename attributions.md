@@ -1,1 +1,1 @@
-[Tomato icon by Icons8](https://icons8.com/icon/18102/tomato)
+![Tomato Icon](https://img.icons8.com/color/1600/tomato.png)[Tomato icon by Icons8](https://icons8.com/icon/18102/tomato)
