@@ -1,13 +1,12 @@
 package eu.bioemergences.mhammons.latomate.controllers
 
-import akka.actor.typed.ActorRef
 import com.jfoenix.controls.{JFXButton, JFXSpinner}
 import eu.bioemergences.mhammons.latomate.Time
 import eu.bioemergences.mhammons.latomate.models.RootModel.{
   RootModel,
   SpawnPomodoroModel
 }
-import eu.bioemergences.mhammons.latomate.models.PomodoroModel._
+import eu.bioemergences.mhammons.latomate.models.pomodoro
 import javafx.application.Platform
 import javafx.fxml.FXML
 import javafx.scene.control.Label
@@ -34,7 +33,7 @@ class PomodoroControllerImpl(rootModel: RootModel) extends PomodoroController {
   @FXML
   protected var startButton: JFXButton = _
 
-  private var pomodoroModel: Option[PomodoroModelRef] = None
+  private var pomodoroModel: Option[pomodoro.Requestee] = None
 
   private val warningTone: AudioClip = new AudioClip(
     getClass.getClassLoader.getResource("Metronome.wav").toExternalForm)
@@ -44,17 +43,17 @@ class PomodoroControllerImpl(rootModel: RootModel) extends PomodoroController {
 
   @FXML
   protected[controllers] def stop() = {
-    pomodoroModel.foreach(_ ! Stop)
+    pomodoroModel.foreach(_ ! pomodoro.Stop)
   }
 
   @FXML
   protected[controllers] def snooze() = {
-    pomodoroModel.foreach(_ ! Snooze)
+    pomodoroModel.foreach(_ ! pomodoro.Snooze)
   }
 
   @FXML
   protected[controllers] def start() = {
-    pomodoroModel.foreach(_ ! Start)
+    pomodoroModel.foreach(_ ! pomodoro.Start)
   }
 
   @FXML
@@ -62,7 +61,7 @@ class PomodoroControllerImpl(rootModel: RootModel) extends PomodoroController {
     rootModel ! SpawnPomodoroModel(this)
   }
 
-  def setModel(tM: PomodoroModelRef) =
+  def setModel(tM: pomodoro.Requestee) =
     Platform.runLater(() => {
       pomodoroModel = Some(tM)
     })
@@ -77,9 +76,9 @@ class PomodoroControllerImpl(rootModel: RootModel) extends PomodoroController {
       snoozeButton.setDisable(false)
     })
 
-  def updateTimer(timeMillis: Long, progress: Double) =
+  def updateTimer(timeLeft: FiniteDuration, progress: Double) =
     Platform.runLater(() => {
-      timeRemaining.setText(Time.prettyPrintMillis(timeMillis))
+      timeRemaining.setText(Time.prettyPrintMillis(timeLeft.toMillis))
       pomodoroProgress.setProgress(progress)
     })
 

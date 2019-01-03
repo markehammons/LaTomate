@@ -3,15 +3,20 @@ package eu.bioemergences.mhammons.latomate.models
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior, PostStop}
 import eu.bioemergences.mhammons.latomate.controllers.PomodoroControllerImpl
+import eu.bioemergences.mhammons.latomate.models.pomodoro.{
+  Configuration,
+  Implementation
+}
 
 object RootModel {
   def init: Behavior[RootVocabulary] =
     Behaviors
       .receive[RootVocabulary] {
         case (context, SpawnPomodoroModel(controller)) =>
-          val timerModelState = PomodoroModelState(true, 0, controller)
           controller.setModel(
-            context.spawn(PomodoroModel.stopped(timerModelState), "PomodoroModel"))
+            context.spawn(Implementation.init(controller,
+                                              Configuration.default),
+                          "PomodoroModel"))
           Behavior.same
       }
       .receiveSignal {
