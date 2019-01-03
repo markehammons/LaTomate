@@ -8,7 +8,11 @@ matrix:
     env: CI_SCRIPT="mill LaTomate.test"
     jdk: openjdk11
     
-script:
+before_script:
   - sudo sh -c '(echo "#!/usr/bin/env sh" && curl -L https://github.com/lihaoyi/mill/releases/download/0.3.5/0.3.5) > /usr/local/bin/mill && chmod +x /usr/local/bin/mill'
+script:
   - "$CI_SCRIPT"
 
+cache:
+  directories:
+  - $HOME/.coursier
