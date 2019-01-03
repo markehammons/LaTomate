@@ -50,6 +50,8 @@ class PomodoroSpecification
 
       timerModel.run(Stop)
 
+      childMailbox.expectMessage(timer.Shutdown)
+
       val stateMailbox = TestInbox[State]()
 
       timerModel.run(GetState(stateMailbox.ref))
@@ -64,6 +66,7 @@ class PomodoroSpecification
         .repeat(25)
       (mockController.stopTimer _).verify("Stopped").twice()
       (mockController.startWork _).verify("Pomodoro", workDuration)
+      (mockController.disableSnooze _).verify()
     }
 
     "cycle through its states appropriately" in {
@@ -92,9 +95,13 @@ class PomodoroSpecification
         pTMailbox.expectMessage(timer.Start)
         timerModel.run(ma.adapt(timer.Complete(Duration.Zero)))
 
+        pTMailbox.expectMessage(timer.Shutdown)
+
         val rTMailbox = timerModel.childTestKit(timerModel.expectEffectType[Spawned[timer.Request]].ref).selfInbox()
         rTMailbox.expectMessage(timer.Start)
         timerModel.run(ma.adapt(timer.Complete(Duration.Zero)))
+
+        rTMailbox.expectMessage(timer.Shutdown)
       }
 
       (mockTimer.init _).verify(state.workDuration, state.warningPoint, state.tickPeriod, Some(state.timerInterface)).repeat(4)

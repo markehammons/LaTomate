@@ -50,17 +50,23 @@ case object Implementation extends Interface with StatefulTypedActor[State, Requ
               Behaviors.same
             case timer.Complete(_) =>
               state.controller.periodCompleteNotification()
+              pomodoroTimer ! timer.Shutdown
               rest
             case timer.Warning(_) =>
               state.controller.periodEndingNotification()
               Behaviors.same
           }
         case Stop =>
+          pomodoroTimer ! timer.Shutdown
           stopped
         case Snooze =>
           if (snoozes < state.snoozeLimit) {
             snoozes += 1
             pomodoroTimer ! timer.AdjustDuration(state.snoozeLength)
+
+            if(snoozes == state.snoozeLimit) {
+              state.controller.disableSnooze()
+            }
           }
           Behaviors.same
       }
@@ -102,9 +108,11 @@ case object Implementation extends Interface with StatefulTypedActor[State, Requ
               Behaviors.same
             case timer.Complete(_) =>
               state.controller.periodCompleteNotification()
+              restTimer ! timer.Shutdown
               stopped
           }
         case Stop =>
+          restTimer ! timer.Shutdown
           stopped
       }
     }
@@ -112,13 +120,14 @@ case object Implementation extends Interface with StatefulTypedActor[State, Requ
   override protected def genericSignalHandler(implicit state: State)
     : PartialFunction[(ActorContext[Request], Signal), Behavior[Request]] = {
     case (ctx, PostStop) =>
-      ctx.log.debug("Stopping")
+      ctx.log.info("Stopping")
       Behaviors.stopped
   }
 
   override protected def genericHandler(request: Request)(
       implicit state: State): Behavior[Request] = request match {
-    case Stop     => stopped(state)
+    case Stop     =>
+      stopped
     case Shutdown => Behaviors.stopped
     case GetState(requester) =>
       requester ! state
